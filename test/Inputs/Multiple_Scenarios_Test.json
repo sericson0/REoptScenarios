@@ -1,0 +1,37 @@
+{
+    "Site": {
+        "longitude": -105.22,
+        "latitude": 39.7
+    }, 
+
+    "Financial": {
+        "analysis_years": 1,
+        "om_cost_escalation_pct": 0.0,
+        "elec_cost_escalation_pct": 0.0,
+        "offtaker_tax_pct": 0.0,
+        "owner_tax_pct": 0.0,
+        "offtaker_discount_pct": 0.0,
+        "two_party_ownership": false,
+        "owner_discount_pct": 0.00,
+        "analysis_years": 1
+    }, 
+
+    "PV": {
+        "cost_per_kw": 2.75,
+        "tilt": 45,
+        "production_factor": [1.0, 1.0, 1.0, 1.0, 1.0],
+        "om_cost_per_kw": 0.0,
+        "degradation_pct": 0.0,
+        "macrs_option_years": 5,
+        "macrs_bonus_pct": 0.0,
+        "total_itc_pct": 0.0
+    },
+
+    "ElectricTariff": {
+        "monthly_energy_rates":[1,1,1,1,1,1,1,1,1,1,1,1]
+    },
+    
+    "ElectricLoad": {
+        "load_kw": [5,5,10,11,11]
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "lowPVlowLoad": {
+        "load_scaling": 0.8,
+        "pv_prod_factor_scaling": 0.8,
+        "scenario_prob": 0.1
+    },
+    "medPVlowLoad": {
+        "load_scaling": 0.8,
+        "pv_prod_factor_scaling": 1.0,
+        "scenario_prob": 0.1
+    },
+    "highPVhighLoad": {
+        "load_scaling": 0.8,
+        "pv_prod_factor_scaling": 1.2,
+        "scenario_prob": 0.1
+    },
+    "lowPVmedLoad": {
+        "load_scaling": 1.0,
+        "pv_prod_factor_scaling": 0.8,
+        "scenario_prob": 0.1
+    },
+    "medPVmedLoad": {
+        "load_scaling": 1.0,
+        "pv_prod_factor_scaling": 1.0,
+        "scenario_prob": 0.2
+    },
+    "medPVhighLoad": {
+        "load_scaling": 1.0,
+        "pv_prod_factor_scaling": 1.2,
+        "scenario_prob": 0.1
+    },
+    "lowPVhighLoad": {
+        "load_scaling": 1.2,
+        "pv_prod_factor_scaling": 0.8,
+        "scenario_prob": 0.1
+    },
+    "medPVhighLoad": {
+        "load_scaling": 1.0,
+        "pv_prod_factor_scaling": 1.2,
+        "scenario_prob": 0.1
+    },
+    "highPVlowLoad": {
+        "load_scaling": 1.2,
+        "pv_prod_factor_scaling": 1.2,
+        "scenario_prob": 0.1
+    }
+}

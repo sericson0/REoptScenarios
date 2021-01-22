@@ -1,0 +1,10 @@
+{
+    "lowPV": {
+        "load_scaling": 0.7,
+        "scenario_prob": 0.5
+    },
+    "highPV": {
+        "load_scaling": 1.3, 
+        "scenario_prob": 0.5
+    }
+}

@@ -1,0 +1,107 @@
+{
+    "ElectricLoad": {
+        "loads_kw_is_net": true,
+        "critical_load_pct": 0.5
+    }, 
+
+    "ElectricTariff": {
+        "year": 2017,
+        "time_steps_per_hour": 1,
+        "NEM": false,
+        "curtail_cost": 0,
+        "urdb_version":7,
+        "urdb_key": "2qt5uihpKXdywTj3uMIhBewxY9K4eNjpRje1JUPL",
+        "wholesale_rate": 0,
+        "curtail_cost": 0
+    },
+    "Financial": {
+        "om_cost_escalation_pct": 0.025,
+        "elec_cost_escalation_pct": 0.025,
+        "offtaker_tax_pct": 0.26,
+        "owner_tax_pct": 0.26,
+        "offtaker_discount_pct": 0.083,
+        "two_party_ownership": false,
+        "owner_discount_pct": 0.083,
+        "analysis_years": 25,
+        "macrs_five_year" :[0.2, 0.32, 0.192, 0.1152, 0.1152, 0.0576], 
+        "macrs_seven_year": [0.1429, 0.2449, 0.1749, 0.1249, 0.0893, 0.0892, 0.0893, 0.0446]
+    }, 
+    "Generator": {
+        "existing_kw":0,
+        "min_kw": 0,
+        "max_kw": 1.0e6,
+        "cost_per_kw": 500.0,
+        "om_cost_per_kw": 10.0,
+        "om_cost_per_kwh": 0.0,
+        "fuel_cost_per_gallon": 3.0,
+        "fuel_slope_gal_per_kwh": 0.076,
+        "fuel_intercept_gal_per_hr": 0.0,
+        "fuel_avail_gal": 660.0,
+        "min_turn_down_pct": 0.0, 
+        "only_runs_during_grid_outage": true,
+        "sells_energy_back_to_grid": false
+    },
+    "GridScenario": {
+        "name":"",
+        "pv_prod_factor_scaling": 1.0,
+        "utility_cost_scaling": 1.0,
+        "load_scaling": 1.0,
+        "scenario_prob":1.0
+    },
+    "OutageEvent": {
+        "name": "_outage",
+        "times": [],
+        "outage_duration_probs": [],
+        "start_probs": [],
+        "load_scaling": 0.5,
+        "VOLL": 10,
+        "pv_prod_factor_scaling": 1.0,
+        "load_scaling": 1.0
+    },  
+    "PV": {
+        "array_type": 1,
+        "module_type": 0,
+        "losses": 0.14,
+        "azimuth": 180.0,
+        "location": "both", 
+        "min_kw": 0,
+        "max_kw": 1.0e6,
+        "cost_per_kw": 1600.0,
+        "om_cost_per_kw": 16.0,
+        "degradation_pct": 0.005,
+        "macrs_option_years": 5,
+        "macrs_bonus_pct": 1.0,
+        "macrs_itc_reduction": 0.5,
+        "total_itc_pct": 0.26,
+        "total_rebate_per_kw": 0.0,
+        "kw_per_square_foot": 0.01,
+        "acres_per_kw": 6e-3,
+        "inv_eff": 0.96,
+        "dc_ac_ratio": 1.2
+    },
+    "Storage": {
+        "min_kw": 0.0,
+        "max_kw": 1.0e4,
+        "min_kwh": 0.0,
+        "max_kwh": 1.0e6,
+        "internal_efficiency_pct": 0.975,
+        "inverter_efficiency_pct": 0.96,
+        "rectifier_efficiency_pct": 0.96,
+        "soc_min_pct": 0.2,
+        "soc_init_pct": 0.5,
+        "can_grid_charge": true,
+        "can_grid_export": false,
+        "cost_per_kw": 840.0,
+        "cost_per_kwh": 420.0,
+        "om_cost_per_kw": 10,
+        "replace_cost_per_kw": 410.0,
+        "replace_cost_per_kwh": 200.0,
+        "inverter_replacement_year": 10,
+        "battery_replacement_year": 10,
+        "macrs_option_years": 7,
+        "macrs_bonus_pct": 1.0,
+        "macrs_itc_reduction": 0.5,
+        "total_itc_pct": 0.0,
+        "total_rebate_per_kw": 0.0
+    }
+}
