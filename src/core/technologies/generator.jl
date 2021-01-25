@@ -55,13 +55,13 @@ function generator_scenario(m, params, scenario, additional_args)
 		return (gen = [], load = [], cost = 0)
 	end
 
-	gen_output = @variable(m, [ts in scenario.times], base_name = "dv_generator_output")
+	gen_output = @variable(m, [ts in scenario.times], base_name = "dv_generator_output", lower_bound = 0)
 
 
 	if g.min_turndown_pct > 0
 		bin_gen_is_on = @variable(m, [ts in scenario.times], base_name = "dv_generator_is_on$(scenario.name)", binary = true)
 		#Minimum turndown cosntraint
-		@constraint(m, [ts in scenario.times], gen_output[ts] >= g.min_turndown_pct*m[:dv_generator_kw]*bin_gen_is_on[ts])
+		@constraint(m, [ts in scenario.times], gen_output[ts] >= g.min_turndown_pct*m[:dv_generator_kw] - Big_M * (1- bin_gen_is_on[ts]))
 		#Capacity constraint
 
 	elseif g.fuel_intercept_gal_per_hr > 0
@@ -69,8 +69,9 @@ function generator_scenario(m, params, scenario, additional_args)
 	else
 		bin_gen_is_on = [1.0 for ts in scenario.times]
 	end
-
-	@constraint(m, [ts in scenario.times], gen_output[ts] <= m[:dv_generator_kw]*bin_gen_is_on[ts])
+	#generator output constrained to zero when off and to dv_generator_kw when on.
+	@constraint(m, [ts in scenario.times], gen_output[ts] <= m[:dv_generator_kw])
+	@constraint(m, [ts in scenario.times], gen_output[ts] <= Big_M * bin_gen_is_on[ts])
 	fuel_use = @expression(m, g.fuel_slope_gal_per_kwh * gen_output[ts] + g.fuel_intercept_gal_per_hr * bin_gen_is_on[ts] for ts in scenario.times)
 
 	generation_cost = sum(fuel_use)*g.fuel_cost_per_gallon + sum(gen_output)*g.om_cost_per_kwh

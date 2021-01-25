@@ -8,6 +8,7 @@ using JuMP.Containers: DenseAxisArray
 import JSON
 
 include("./keys.jl")
+include("./constants.jl")
 
 main = "./core"
 
