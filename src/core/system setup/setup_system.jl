@@ -40,7 +40,7 @@ end
 function get_system_techs(input_dic)
     system_techs = []
     #Add technologies here
-    technologies_to_check = ["PV", "Storage"]
+    technologies_to_check = ["PV", "Storage", "Generator"]
     for tech in technologies_to_check
         if haskey(input_dic, tech)
             push!(system_techs, lowercase(tech))

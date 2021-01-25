@@ -1,0 +1,42 @@
+{
+    "Site": {
+        "longitude": -105.22,
+        "latitude": 39.7
+    }, 
+
+    "Financial": {
+        "analysis_years": 1,
+        "om_cost_escalation_pct": 0.0,
+        "elec_cost_escalation_pct": 0.0,
+        "offtaker_tax_pct": 0.0,
+        "owner_tax_pct": 0.0,
+        "offtaker_discount_pct": 0.0,
+        "two_party_ownership": false,
+        "owner_discount_pct": 0.00,
+        "analysis_years": 1
+    }, 
+
+        "Generator": {
+        "existing_kw":0,
+        "min_kw": 0,
+        "max_kw": 200,
+        "cost_per_kw": 1.0,
+        "om_cost_per_kw": 0.0,
+        "om_cost_per_kwh": 0.0,
+        "fuel_cost_per_gallon": 1.0,
+        "fuel_slope_gal_per_kwh": 0.5,
+        "fuel_intercept_gal_per_hr": 1.0,
+        "fuel_avail_gal": 660.0,
+        "min_turndown_pct": 0.6, 
+        "only_runs_during_grid_outage": false,
+        "sells_energy_back_to_grid": false
+    },
+
+    "ElectricTariff": {
+        "monthly_energy_rates":[1,1,1,1,1,1,1,1,1,1,1,1]
+    },
+    
+    "ElectricLoad": {
+        "load_kw": [4,6,8,10,12]
+    }
+}

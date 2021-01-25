@@ -37,9 +37,10 @@
         "fuel_slope_gal_per_kwh": 0.076,
         "fuel_intercept_gal_per_hr": 0.0,
         "fuel_avail_gal": 660.0,
-        "min_turn_down_pct": 0.0, 
+        "min_turndown_pct": 0.0, 
         "only_runs_during_grid_outage": true,
-        "sells_energy_back_to_grid": false
+        "sells_energy_back_to_grid": false,
+        "only_runs_during_grid_outage": true
     },
     "GridScenario": {
         "name":"",
