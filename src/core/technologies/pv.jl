@@ -1,7 +1,3 @@
-#PV struct contains PV system parameters
-#pv_system adds dv_pv_kw to model
-#pv_scenario adds pv dispatch
-
 @with_kw mutable struct PV
       tilt::Float64
       array_type::Int64
@@ -25,31 +21,57 @@
       dc_ac_ratio::Float64
       production_factor::Array{Float64,1}
       degradation_factor::Float64
-  end
+end
 
 ##
-function pv_scenario(m, sys_params, scenario, production_factor)
+function setup_pv_inputs(value_dic::Dict, params::Dict)
+	financial = params["financial"]
+	site = params["site"]
 
-    production_factor *= scenario.pv_prod_factor_scaling * sys_params["pv"].degradation_factor
+	if !(haskey(value_dic, "tilt"))
+		value_dic["tilt"] = site.latitude
+	end
+	#Calculates maximum system size
+	roof_max_kw = site.roof_squarefeet * value_dic["kw_per_square_foot"]
+	land_max_kw = site.land_acres / value_dic["acres_per_kw"]
+	if value_dic["location"] == "both"
+		value_dic["max_kw"] = min(value_dic["max_kw"], roof_max_kw + land_max_kw)
+	elseif value_dic["location"] == "roof"
+		value_dic["max_kw"] = min(value_dic["max_kw"], roof_max_kw)
+	else
+		value_dic["max_kw"] = min(value_dic["max_kw"], land_max_kw)
+	end
+	#Gets production factor from PV Watts
+	if !(haskey(value_dic, "production_factor"))
+		value_dic["production_factor"] = prodfactor(value_dic, site.longitude, site.latitude)
+	end
+
+	value_dic["degradation_factor"] = levelization_factor(financial.analysis_years, financial.elec_cost_escalation_pct, financial.offtaker_discount_pct, value_dic["degradation_pct"])
+
+	return value_dic
+end
+##
+function pv_system(m::JuMP.AbstractModel, pv::PV, params::Dict)
+	@variable(m, pv.min_kw <= dv_pv_kw <= pv.max_kw)
+
+	cost = pv_cost(m, pv, params["financial"])
+
+	params["results"]["system"]["pv_kw"] = m[:dv_pv_kw]
+	params["results"]["system"]["pv_capital_cost"] = cost
+	return cost
+end
+##
+function pv_scenario(m::JuMP.AbstractModel, params::Dict, scenario::Scenario, production_factor::Array{Float64,1})
+    production_factor *= scenario.pv_prod_factor_scaling * params["pv"].degradation_factor
     pv_output = @variable(m, [scenario.times], base_name = "dv_pv_output$(scenario.name)")
     #Cannot output more than pv production factor. Could make hard constraint if do not allow turndown
     @constraint(m, [ts in scenario.times], pv_output[ts] <= production_factor[ts] * m[:dv_pv_kw])
+
+	add_scenario_results(params["results"], scenario, "pv"; gen = pv_output)
     return (gen = pv_output, load = [], cost = 0)
 end
 ##
-function pv_system(m, input_dic, financial)
-    pv = initialize_with_inputs(input_dic, PV, "PV", setup_pv_inputs, validate_pv_args)
-    pv.degradation_factor = levelization_factor(financial.analysis_years, financial.elec_cost_escalation_pct, financial.offtaker_discount_pct, pv.degradation_pct)
-
-    @variable(m, pv.min_kw <= dv_pv_kw <= pv.max_kw)
-
-    cost = pv_cost(m, pv, financial)
-    return (struct_instance = pv, sys_cost = cost)
-end
-
-##
-
-function pv_cost(m, pv, financial)
+function pv_cost(m::JuMP.AbstractModel, pv::PV, financial::Financial)
     effective_cost_per_kw = effective_cost(;
                 itc_basis= pv.cost_per_kw,
                 replacement_cost= 0.0,
@@ -67,33 +89,6 @@ function pv_cost(m, pv, financial)
     return financial.two_party_factor * (capital_costs + om_costs)
 end
 ##
-
-function setup_pv_inputs(value_dic, sys_param_dic)
-    if !(haskey(value_dic, "tilt"))
-        value_dic["tilt"] = sys_param_dic["Site"]["latitude"]
-    end
-    #
-    roof_max_kw = haskey(sys_param_dic["Site"], "roof_squarefeet") ? sys_param_dic["Site"]["roof_squarefeet"] * value_dic["kw_per_square_foot"] : 1e10
-    land_max_kw = haskey(sys_param_dic["Site"], "land_acres") ? sys_param_dic["Site"]["land_acres"] / value_dic["acres_per_kw"] : 1e10
-
-    if value_dic["location"] == "both"
-        value_dic["max_kw"] = min(value_dic["max_kw"], roof_max_kw + land_max_kw)
-    elseif value_dic["location"] == "roof"
-        value_dic["max_kw"] = min(value_dic["max_kw"], roof_max_kw)
-    else
-        value_dic["max_kw"] = min(value_dic["max_kw"], land_max_kw)
-    end
-
-    if !(haskey(value_dic, "production_factor"))
-        value_dic["production_factor"] = prodfactor(value_dic, sys_param_dic["Site"]["longitude"], sys_param_dic["Site"]["latitude"])
-    end
-
-    value_dic["degradation_factor"] = 1.0
-
-    return value_dic
-end
-##
-
 function validate_pv_args(pv::PV)
   invalid_args = String[]
   if !(0 <= pv.azimuth < 360)
@@ -128,11 +123,26 @@ function validate_pv_args(pv::PV)
       error("Invalid argument values: $(invalid_args)")
   end
 end
+##
+function pv_args_grid_scenario(m::JuMP.AbstractModel, scenario::GridScenario, params::Dict)
+	production_factor = scenario.pv_prod_factor
+	if production_factor == nothing
+		production_factor = params["pv"].production_factor
+	end
+	return production_factor
+end
+##
 
-
+function pv_args_outage_event(m::JuMP.AbstractModel, event::OutageEvent, params::Dict, outage_start::Int)
+	production_factor = event.pv_prod_factor
+	if production_factor == nothing
+		production_factor = params["pv"].production_factor
+	end
+	return production_factor
+end
 ##
 #Get pv watts data
-function prodfactor(vals, longitude, latitude)
+function prodfactor(vals::Dict, longitude::Float64, latitude::Float64)
     timeframe = "hourly"
     url = string("https://developer.nrel.gov/api/pvwatts/v6.json", "?api_key=", nrel_developer_key,
         "&lat=", latitude , "&lon=", longitude, "&tilt=", vals["tilt"],
@@ -158,22 +168,4 @@ function prodfactor(vals, longitude, latitude)
     catch e
         return "Error occurred : $e"
     end
-end
-
-##
-function pv_args_grid_scenario(m, scenario, sys_params)
-	production_factor = scenario.pv_prod_factor
-	if production_factor == nothing
-		production_factor = sys_params["pv"].production_factor
-	end
-	return production_factor
-end
-##
-
-function pv_args_outage_event(m, event, sys_params, outage_start)
-	production_factor = event.pv_prod_factor
-	if production_factor == nothing
-		production_factor = sys_params["pv"].production_factor
-	end
-	return production_factor
 end

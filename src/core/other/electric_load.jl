@@ -1,4 +1,4 @@
-function site_load_system(load_inputs)
+function site_load(load_inputs::Dict)
     #Reads in user defined load or uses commercial building load profile loads
     if haskey(load_inputs, "load_kw")
         return load_inputs["load_kw"]
@@ -15,14 +15,15 @@ function site_load_system(load_inputs)
 end
 ##
 
-function site_load_scenario(m, sys_params, scenario)
+function site_load_scenario(m::JuMP.AbstractModel, params::Dict, scenario::Scenario)
     #Scenario loads are scaled by load_scaling factor. Note that scenario.times may not be the entire model time (such as for outage events)
-    site_load = DenseAxisArray([sys_params["load"][ts]*scenario.load_scaling for ts in scenario.times], scenario.times)
+    site_load = DenseAxisArray([params["load"][ts]*scenario.load_scaling for ts in scenario.times], scenario.times)
+    add_scenario_results(params["results"], scenario, "load"; load = site_load)
     return (load = site_load, gen = [], cost = 0)
 end
 ##
 
-function add_load_balance_constraints(m, scenario, generation, loads)
+function add_load_balance_constraints(m::JuMP.AbstractModel, scenario::Scenario, generation::Array, loads::Array)
     @constraint(m, [ts in scenario.times], sum([l[ts] for l in loads]) <= sum([g[ts] for g in generation]))
 end
 ##

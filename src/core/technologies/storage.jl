@@ -24,21 +24,23 @@
     total_rebate_per_kw::Float64
 end
 ##
-
-function storage_system(m, input_dic, financial)
-	storage = initialize_with_inputs(input_dic, Storage, "Storage")
+function storage_system(m::JuMP.AbstractModel, storage::Storage, params::Dict)
 
 	#Includes Constraint (4b) lower and upper bounds on storage energy capacity
 	@variable(m, storage.min_kwh  <= dv_storage_kwh  <= storage.max_kwh)
 	#Includes Constraint (4c) lower and upper bounds on storage power capacity
 	@variable(m, storage.min_kw <= dv_storage_kw <= storage.max_kw)
 
-	cost = storage_cost(m, storage, financial)
-	return (struct_instance = storage, sys_cost = cost)
+	cost = storage_cost(m, storage, params["financial"])
+
+	params["results"]["system"]["storage_kw"] = m[:dv_storage_kw]
+	params["results"]["system"]["storage_kwh"] = m[:dv_storage_kwh]
+	params["results"]["system"]["storage_capital_cost"] = cost
+
+	return cost
 end
 ##
-
-function storage_scenario(m, params, scenario, initial_charge)
+function storage_scenario(m::JuMP.AbstractModel, params::Dict, scenario::Scenario, initial_charge)
 	t0 = scenario.times[1] - 1
 	#stored energy values and initial constraint
 	stored_energy_times = [[t0] ; scenario.times]
@@ -69,23 +71,12 @@ function storage_scenario(m, params, scenario, initial_charge)
 	# Constraint discharge is no greater than power capacity
 	@constraint(m, [ts in scenario.times], discharge[ts] <= m[:dv_storage_kw])
 
+
+	add_scenario_results(params["results"], scenario, "storage"; gen = discharge, load = charge, system_state = Dict("storedEnergy"=>stored_energy))
 	return (gen = discharge, load = charge, cost = 0, system_state = Dict("dv_stored_energy"=>stored_energy))
 end
 ##
-function storage_args_grid_scenario(m, scenario, sys_params)
-	#Returns initial charge
-	return m[:dv_storage_kwh] * sys_params["storage"].soc_init_pct
-end
-##
-function storage_args_outage_event(m, event, sys_params, outage_start)
-	#Returns initial charge for outage event
-	return event.system_state["dv_stored_energy"][outage_start-1]
-end
-##
-
-
-
-function storage_cost(m, storage, financial)
+function storage_cost(m::JuMP.AbstractModel, storage::Storage, financial::Financial)
 	effective_cost_per_kw = effective_cost(
 		itc_basis = storage.cost_per_kw,
 		replacement_cost = storage.replace_cost_per_kw,
@@ -114,5 +105,15 @@ function storage_cost(m, storage, financial)
 	capital_costs = effective_cost_per_kw * m[:dv_storage_kw] + effective_cost_per_kwh * m[:dv_storage_kwh]
 	om_costs = financial.pwf_om * storage.om_cost_per_kw * m[:dv_storage_kw] * (1-financial.owner_tax_pct)
 	return financial.two_party_factor * (capital_costs + om_costs)
+end
+##
+function storage_args_grid_scenario(m::JuMP.AbstractModel, scenario::GridScenario, sys_params::Dict)
+	#Returns initial charge
+	return m[:dv_storage_kwh] * sys_params["storage"].soc_init_pct
+end
+##
+function storage_args_outage_event(m::JuMP.AbstractModel, event::OutageEvent, sys_params::Dict, outage_start::Int)
+	#Returns initial charge for outage event
+	return event.system_state["dv_stored_energy"][outage_start-1]
 end
 ##

@@ -28,12 +28,16 @@ data for electric tariff in reopt model
 end
 ##
 
-function tariff_system(input_dic)
+function tariff_system(input_dic::Dict)
     return initialize_with_inputs(input_dic, ElectricTariff, "ElectricTariff", setup_electricity_tariff_inputs)
 end
 ##
 
-function setup_electricity_tariff_inputs(value_dic, input_dic)
+
+
+##
+
+function setup_electricity_tariff_inputs(value_dic::Dict, input_dic::Dict)
     u = nothing
     #TODO update time_steps_per_hour to allow for more than hourly data
     time_steps_per_hour = 1
@@ -139,7 +143,6 @@ end
 # input_values = Dict("ElectricTariff"=>Dict("urdb_label" => "5ed6c1a15457a3367add15ae", "curtail_cost"=>0))
 # x = initialize_with_inputs(input_values, ElectricTariff, "ElectricTariff", setup_electricity_tariff_inputs)
 
-abstract type REoptData end
 # https://discourse.julialang.org/t/vector-of-matrices-vs-multidimensional-arrays/9602/5
 # 5d2360465457a3f77ddc131e has TOU demand
 # 59bc22705457a3372642da67 has monthly tiered demand (no TOU demand)

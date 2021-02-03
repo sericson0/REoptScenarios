@@ -4,11 +4,13 @@ module REoptScenarios
     # cd(dirname(@__FILE__))
 
 using JuMP, GLPK, HTTP, Parameters, Dates, DelimitedFiles
+using Gurobi
 using JuMP.Containers: DenseAxisArray
 import JSON
 
 include("./keys.jl")
 include("./constants.jl")
+include("./types.jl")
 
 main = "./core"
 
@@ -19,8 +21,11 @@ for folder in readdir(main)
 end
 
 export
+    initialize_parameters,
     initialize_system,
     initialize_grid_scenarios,
-    initialize_outage_events
+    initialize_outage_events,
+    get_result_values,
+    run_reopt
 end
 # end

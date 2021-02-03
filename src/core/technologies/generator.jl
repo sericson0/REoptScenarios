@@ -13,43 +13,27 @@
 	only_runs_during_grid_outage::Bool
 end
 ##
-
-function generator_system(m, input_dic, financial)
-	generator = initialize_with_inputs(input_dic, Generator, "Generator")
-
+#
+# function generator_system(m::JuMP.AbstractModel, input_dic::Dict, financial::Financial, results_dic::Dict)
+# 	generator = initialize_with_inputs(input_dic, Generator, "Generator")
+# 	generator_system(m, generator, financial, results_dic)
+# end
+# #
+function generator_system(m::JuMP.AbstractModel, generator::Generator, params::Dict)
 	@variable(m, generator.min_kw  <= dv_generator_kw  <= generator.max_kw)
+	cost = generator_cost(m, generator, params["financial"])
 
-	cost = generator_cost(m, generator, financial)
-	return (struct_instance = generator, sys_cost = cost)
+	params["results"]["system"]["generator_kw"] = m[:dv_generator_kw]
+	params["results"]["system"]["generator_capital_cost"] = cost
+
+	return cost
 end
 ##
-#Alternative Approach
-# if g.min_turndown_pct > 0
-# 	bin_gen_is_on = @variable(m, [ts in scenario.times], base_name = "dv_generator_is_on$(scenario.name)", binary = true)
-# 	shadow_gen_output = @variable(m, [ts in scenario.times], base_name = "shadow_generator_output", lower_bound = 0)
-# 	#shadow generator output is always on at at least min turndown
-# 	@constraint(m, [ts in scenario.times], shadow_gen_output[ts] >= g.min_turndown_pct*m[:dv_generator_kw])
-# 	#Capacity constraint
-# 	@constraint(m, [ts in scenario.times], shadow_gen_output[ts] <= m[:dv_generator_kw]*bin_gen_is_on[ts])
-#
-# 	gen_output = @variable(m, [ts in scenario.times], base_name = "dv_generator_output")
-# 	@constraint(m, [ts in scenario.times], gen_output[ts] == shadow_gen_output[ts] - (1-bin_gen_is_on[ts])*g.min_turndown_pct)
-# else
-# 	gen_output = @variable(m, [ts in scenario.times], base_name = "dv_generator_output", lower_bound = 0)
-#
-#
-# 	if g.fuel_intercept_gal_per_hr > 0
-# 		bin_gen_is_on = @variable(m, [ts in scenario.times], base_name = "dv_generator_is_on$(scenario.name)", binary = true)
-# 		@constraint(m, [ts in scenario.times], gen_output[ts] <= m[:dv_generator_kw]*bin_gen_is_on[ts] )
-# 	else
-# 		@constraint(m, [ts in scenario.times], gen_output[ts] <= m[:dv_generator_kw])
-# 	end
-# end
-function generator_scenario(m, params, scenario, additional_args)
+function generator_scenario(m::JuMP.AbstractModel, params::Dict, scenario::Scenario, additional_args::NamedTuple)
 	# limited_fuel = additional_args.limited_fuel
 	#is_outage = additional_args.is_outage
 	g = params["generator"]
-
+	Big_M = calculate_generator_bigM(params::Dict)
 	#No variables for non outage scenario
 	if g.only_runs_during_grid_outage & !(additional_args.is_outage)
 		return (gen = [], load = [], cost = 0)
@@ -82,24 +66,28 @@ function generator_scenario(m, params, scenario, additional_args)
 		fuel_remaining = @variable(m, [ts in fuel_times], base_name = "dv_fuel_remaining$(scenario.name)", lower_bound = 0)
 		@constraint(m, fuel_remaining[t0] == g.fuel_avail_gal)
 		@constraint(m, [ts in scenario.times], fuel_remaining[ts] == fuel_remaining[ts-1] - fuel_use[ts])
+
+
+		add_scenario_results(results_dic, scenario, "generator"; gen = gen_output, system_state = Dict("fuelRemaining"=>fuel_remaining), cost = generation_cost)
 		return (gen = gen_output, load = [], cost = generation_cost, system_state = Dict("dv_fuel_remaining"=>fuel_remaining))
 	else
+		add_scenario_results(params["results"], scenario, "generator"; gen = gen_output, cost = generation_cost)
 		return (gen = gen_output, load = [], cost = generation_cost)
 	end
 end
 ##
-function generator_args_grid_scenario(m, scenario, sys_params)
+function generator_args_grid_scenario(m::JuMP.AbstractModel, scenario::GridScenario, sys_params::Dict)
 	#No limited fuel for grid scenario
 	return (limited_fuel = false, is_outage = false)
 end
 ##
-function generator_args_outage_event(m, event, sys_params, outage_start)
+function generator_args_outage_event(m::JuMP.AbstractModel, event::OutageEvent, sys_params::Dict, outage_start::Int)
 	#Limited fuel for outage event
 	return (limited_fuel = true, is_outage = true)
 end
 ##
 
-function generator_cost(m, generator, financial)
+function generator_cost(m::JuMP.AbstractModel, generator::Generator, financial::Financial)
 	effective_cost_per_kw = effective_cost(
 		itc_basis = generator.cost_per_kw,
 		replacement_cost = 0.0,
@@ -117,3 +105,6 @@ function generator_cost(m, generator, financial)
 	return financial.two_party_factor * (capital_costs + om_costs)
 end
 ##
+function calculate_generator_bigM(params::Dict)
+	return 2*maximum(params["load"])
+end

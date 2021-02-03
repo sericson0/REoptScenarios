@@ -80,6 +80,12 @@
         "inv_eff": 0.96,
         "dc_ac_ratio": 1.2
     },
+    "Site": {
+        "longitude": -118.1164613,
+        "latitude": 34.5794343,
+        "roof_squarefeet": 1.0e9,
+        "land_acres": 1.0e9
+    },
     "Storage": {
         "min_kw": 0.0,
         "max_kw": 1.0e4,
