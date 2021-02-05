@@ -3,13 +3,12 @@
 module REoptScenarios
     # cd(dirname(@__FILE__))
 
-using JuMP, GLPK, HTTP, Parameters, Dates, DelimitedFiles
+using JuMP, GLPK, HTTP, Parameters, Dates, DelimitedFiles, DataFrames
 using Gurobi
 using JuMP.Containers: DenseAxisArray
-import JSON
+import JSON, CSV
 
 include("./keys.jl")
-include("./constants.jl")
 include("./types.jl")
 
 main = "./core"
@@ -21,11 +20,7 @@ for folder in readdir(main)
 end
 
 export
-    initialize_parameters,
-    initialize_system,
-    initialize_grid_scenarios,
-    initialize_outage_events,
-    get_result_values,
-    run_reopt
+    run_reopt,
+    save_results
 end
 # end

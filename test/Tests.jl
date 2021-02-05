@@ -1,6 +1,7 @@
-using JuMP
+# using JuMP
 # using GLPK
 using Gurobi
+using DataFrames
 #Ran tests using Gurobi. Pick your favorite optimizer and have fun
 # Optimizer_Type = Gurobi.Optimizer
 
@@ -25,6 +26,8 @@ println("LCC is: ",  results["LCC"], " Value should be 1.2388763e7")
 println("PV: ", results["system"]["pv_kw"], ". Value should be Should be 216.67")
 println("Storage kw: ", results["system"]["storage_kw"], ". Value should be 55.885")
 println("Storage kWh: ", results["system"]["storage_kwh"], ". Value should be 78.911")
+
+# writedlm("../test/test outputs/test2.csv", r2, ",")
 #______________________________________________________________________________________
 #Tests the multiple scenarios approach
 #Single year with no incentives or taxes.
@@ -35,7 +38,6 @@ println("Storage kWh: ", results["system"]["storage_kwh"], ". Value should be 78
 results = run_reopt("../test/Inputs/Multiple_Scenarios_Test.json", Optimizer_Type)
 println("System cost is ", results["LCC"], ". Should be 29.5")
 println("PV value is: ", results["system"]["pv_kw"], ". Should be 10.0")
-
 
 #Now we are going run with two scenarios, one where the load is 30% smaller and one where load is 30% larger.
 #Load is now [3.5, 3.5, 7, 7.7, 7.7] and [6.5, 6.5, 13, 14.3, 14.3]
@@ -64,12 +66,13 @@ tstart = time()
 results = run_reopt( "../test/Inputs/pv_storage.json", Optimizer_Type;  additional_scenario_inputs = "../test/Inputs/Large_Test_Scenario_Inputs.json")
 println("Time to optimize model was: ", time() - tstart)
 
-
-
 println("LCC is: ",  results["LCC"], ". Compared to 1.2388763e7 for single scenario case") #Not checked
 println("PV: ", results["system"]["pv_kw"], ". Should be same as single scenario case of 216.67 due to roof space + land constraint") #Not checked
 println("Storage kw: ", results["system"]["storage_kw"], ". Compare to 55.88 for single scenario case") #Not checked
 println("Storage kWh: ", results["system"]["storage_kwh"], ". Compare to 78.91 for single scenario case") #Not checked
+
+#Save results to csv files
+save_results(results, "../test/test outputs")
 
 ##
 #Simple tariff and only Generator

@@ -21,14 +21,15 @@ end
 ##
 function initialize_grid_scenarios(m, params, scenario_specific_inputs = nothing)
     # input_dic = JSON.parsefile(input_file)
+	params["results"]["grid_connected"] = Dict()
     scenario = initialize_with_inputs(params, params["defaults"], "GridScenario", setup_grid_scenario_inputs)
     Costs = @expression(m, 0)
     system_state = Dict()
     if scenario_specific_inputs == nothing
 		if scenario.name == ""
-			params["results"]["grid_scenario"] = Dict()
+			params["results"]["grid_connected"]["grid_scenario"] = Dict()
 		else
-			params["results"][scenario.name] = Dict()
+			params["results"]["grid_connected"][scenario.name] = Dict()
 		end
         Costs += create_scenario(m, scenario::Scenario, params, system_state)
     else
@@ -38,7 +39,7 @@ function initialize_grid_scenarios(m, params, scenario_specific_inputs = nothing
             for (key, val) in scenario_vals
                 setfield!(scenario, Symbol(key), val)
             end
-			params["results"][scenario.name] = Dict()
+			params["results"]["grid_connected"][scenario.name] = Dict()
             Costs += create_scenario(m, scenario, params, system_state)
             # println(scenario_name, ": ", Costs)
         end
