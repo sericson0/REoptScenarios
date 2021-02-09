@@ -1,13 +1,22 @@
 
-function run_reopt(main_input_file, optimizer_type; additional_scenario_inputs = nothing, results_roundto = 3)
+function run_reopt(main_inputs::Union{String, Dict}, optimizer_type; additional_scenario_inputs = nothing, results_roundto = 3)
     m = Model(optimizer_type)
-    params = initialize_parameters(m, main_input_file)
+    params = initialize_parameters(m, main_inputs)
 
 
     system = initialize_system(m, params)
 
     #Check if multiple scenarios inserted
-    additional_scenarios_dic = additional_scenario_inputs != nothing ? JSON.parsefile(additional_scenario_inputs) : nothing
+    if additional_scenario_inputs == nothing
+        additional_scenarios_dic = nothing
+    elseif isa(additional_scenario_inputs, Dict)
+        additional_scenarios_dic = additional_scenario_inputs
+    elseif isa(additional_scenario_inputs, String)
+        additional_scenarios_dic = JSON.parsefile(additional_scenario_inputs)
+    else
+        println("Must input nothing, dictionary, or script to additional scenario inputs. Not using additional scenario inputs in run")
+        additional_scenarios_dic = nothing
+    end
 
     grid_scenario = initialize_grid_scenarios(m, params, additional_scenarios_dic)
 

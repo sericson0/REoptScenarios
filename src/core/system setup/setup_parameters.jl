@@ -1,7 +1,12 @@
 
 function initialize_parameters(m::JuMP.AbstractModel, input_file::String)
-    #Creates the dictionary params of parameters
     input_dic = JSON.parsefile(input_file)
+    #Creates the dictionary params of parameters
+    initialize_parameters(m, input_dic)
+end
+
+
+function initialize_parameters(m::JuMP.AbstractModel, input_dic::Dict)
 
     params = Dict()
     params["inputs"] = input_dic
