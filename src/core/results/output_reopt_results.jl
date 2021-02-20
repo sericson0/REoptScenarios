@@ -54,7 +54,11 @@ function get_result_values(results; roundto = 3)
 		try
 			return round(value.(results); digits = roundto)
 		catch
-			return round(results; digits = roundto)
+			try
+				return round.(results; digits = roundto)
+			catch
+				return [round(value(i); digits = roundto) for i in results]
+			end
 		end
 	end
 end

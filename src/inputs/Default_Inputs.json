@@ -1,4 +1,27 @@
 {
+    "CHP": {
+      "min_kw": 0.0,
+      "max_kw": 1.0e6,
+      "cost_per_kw": 2416.7,
+      "om_cost_us_dollars_per_kw": 10,
+      "om_cost_us_dollars_per_kwh": 0.0,
+      "om_cost_us_dollars_per_hr_per_kw_rated": 0.0,
+      "min_turn_down_pct": 0.0,
+      "prime_mover": "recip_engine",
+      "size_class": 1,
+      "thermal_effic_full_load": 0.4418,
+      "thermal_effic_half_load": 0.4664,
+      "elec_effic_full_load": 0.3573,
+      "elec_effic_half_load": 0.3216,
+      "fuel_rate_dollars_per_mmbtu": 10.0,
+      "total_itc_pct": 0.1,
+      "macrs_itc_reduction": 0.5,
+      "macrs_bonus_pct": 1.0,
+      "macrs_option_years": 5,
+      "chp_fuel_escalation_pct": 0.034,
+      "use_chp_defualts":true
+    },
+
     "ElectricLoad": {
         "loads_kw_is_net": true,
         "critical_load_pct": 0.5
@@ -79,6 +102,11 @@
         "acres_per_kw": 6e-3,
         "inv_eff": 0.96,
         "dc_ac_ratio": 1.2
+    },
+    "ResourceAdequacy": {
+        "moo_hours": 4,
+        "num_lookback_days": 10,
+        "include_baseline_scaling": false
     },
     "Site": {
         "longitude": -118.1164613,

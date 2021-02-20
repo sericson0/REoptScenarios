@@ -63,12 +63,12 @@ end
 ##
 function pv_scenario(m::JuMP.AbstractModel, params::Dict, scenario::Scenario, production_factor::Array{Float64,1})
     production_factor *= scenario.pv_prod_factor_scaling * params["pv"].degradation_factor
-    pv_output = @variable(m, [scenario.times], base_name = "dv_pv_output$(scenario.name)")
+    pv_output = @variable(m, [scenario.times], base_name = "dv_pv_output$(scenario.name)", lower_bound = 0)
     #Cannot output more than pv production factor. Could make hard constraint if do not allow turndown
     @constraint(m, [ts in scenario.times], pv_output[ts] <= production_factor[ts] * m[:dv_pv_kw])
 
 	add_scenario_results(params["results"], scenario, "pv"; gen = pv_output)
-    return (gen = pv_output, load = [], cost = 0)
+    return (gen = pv_output, cost = 0)
 end
 ##
 function pv_cost(m::JuMP.AbstractModel, pv::PV, financial::Financial)

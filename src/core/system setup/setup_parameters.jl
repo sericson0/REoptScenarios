@@ -11,34 +11,31 @@ function initialize_parameters(m::JuMP.AbstractModel, input_dic::Dict)
     params = Dict()
     params["inputs"] = input_dic
     params["defaults"] = load_defaults()
-    params["system_techs"] = get_system_techs(input_dic)
+    params["system_techs"] = get_values_to_include(input_dic, "technologies")
+    params["system_tariffs"] = get_values_to_include(input_dic, "tariffs")
 
-    params["load"] = site_load(params["inputs"]["ElectricLoad"])
-    params["times"] = 1:length(params["load"])
+
+
+    params["electric_load"] = site_load(params["inputs"]["ElectricLoad"], "electric_load")
+    params["times"] = 1:length(params["electric_load"])
+
+    if haskey(params["inputs"], "HeatingLoad")
+        params["heating_load"] = site_load(params["inputs"]["HeatingLoad"], "heating_load")
+    end
+    if haskey(params["inputs"], "CoolingLoad")
+        params["cooling_load"] = site_load(params["inputs"]["CoolingLoad"], "cooling_load")
+    end
 
     params["site"] = initialize_with_inputs(params, params["defaults"], "Site")
     params["financial"] = initialize_with_inputs(params, params["defaults"], "Financial", setup_financial_inputs)
 
-    if haskey(params["inputs"], "ElectricTariff")
-        params["electric_tariff"] = initialize_with_inputs(params, params["defaults"], "ElectricTariff", setup_electricity_tariff_inputs)
+    for tariff_name in params["system_tariffs"]
+        params[tariff_name] = add_parameters(tariff_name, params)
     end
 
     for tech_name in params["system_techs"]
-        #TODO This could be done better. Gets at PV being all uppercase
-        if length(tech_name) <= 3
-            struct_name = uppercase(tech_name)
-        else
-            struct_name = uppercasefirst(tech_name)
-        end
-
-        setup_inputs_name = Symbol("setup_"*tech_name*"_inputs")
-        validate_args_name = Symbol("validate_"*tech_name*"_args")
-        setup_inputs_fun = isdefined(REoptScenarios, setup_inputs_name) ? getfield(REoptScenarios, setup_inputs_name) : nothing
-        validate_args_fun = isdefined(REoptScenarios, validate_args_name) ? getfield(REoptScenarios, validate_args_name) : nothing
-
-        params[tech_name] = initialize_with_inputs(params, params["defaults"], struct_name, setup_inputs_fun, validate_args_fun)
+        params[tech_name] = add_parameters(tech_name, params)
     end
-
 
     params["scenario"] = initialize_with_inputs(params, params["defaults"], "GridScenario", setup_grid_scenario_inputs)
 
@@ -46,16 +43,29 @@ function initialize_parameters(m::JuMP.AbstractModel, input_dic::Dict)
     return params
 end
 ##
-function get_system_techs(input_dic)
-    system_techs = []
-    #Add technologies here
-    technologies_to_check = ["PV", "Storage", "Generator"]
-    for tech in technologies_to_check
-        if haskey(input_dic, tech)
-            push!(system_techs, lowercase(tech))
+function add_parameters(val_name::String, params::Dict)
+    struct_name = get_struct_name(val_name)
+
+    setup_inputs_name = Symbol("setup_" * val_name * "_inputs")
+    validate_args_name = Symbol("validate_" * val_name * "_args")
+    setup_inputs_fun = isdefined(REoptScenarios, setup_inputs_name) ? getfield(REoptScenarios, setup_inputs_name) : nothing
+    validate_args_fun = isdefined(REoptScenarios, validate_args_name) ? getfield(REoptScenarios, validate_args_name) : nothing
+    return initialize_with_inputs(params, params["defaults"], struct_name, setup_inputs_fun, validate_args_fun)
+end
+
+
+
+##
+function get_values_to_include(input_dic, folder)
+    values_included = []
+    values_to_check = replace.(readdir(joinpath(dirname(dirname(@__FILE__)), folder)), ".jl"=>"")
+    # technologies_to_check = ["PV", "Storage", "Generator"]
+    for val in values_to_check
+        if haskey(input_dic, get_struct_name(val))
+            push!(values_included, val)
         end
     end
-    return system_techs
+    return values_included
 end
 ##
 
@@ -104,4 +114,15 @@ function initialize_with_inputs(params, defaults, type_string, specific_changes 
         validate_arguments(struct_instance)
     end
     return struct_instance
+end
+
+function get_struct_name(tech_name::String)
+    struct_name = replace(tech_name, "_" => " ")
+    if length(struct_name) <= 3
+        struct_name = uppercase(struct_name)
+    else
+        struct_name = titlecase(struct_name)
+    end
+    struct_name = replace(struct_name, " " => "")
+    return struct_name
 end

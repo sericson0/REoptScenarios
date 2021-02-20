@@ -28,6 +28,9 @@ function run_reopt(main_inputs::Union{String, Dict}, optimizer_type; additional_
     end
 
     @objective(m, Min, system.costs + grid_scenario.costs + outage_events.costs)
+    # open("test_file.txt", "w") do io
+    #     print(io, m)
+    # end
     optimize!(m)
 
     results = get_result_values(params["results"]; roundto = results_roundto)

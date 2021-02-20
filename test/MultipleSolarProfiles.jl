@@ -27,6 +27,11 @@ for i in 2:(ncol(solar_profiles)-1)
     solar_profile_runs["SolarProfile_"*string(i-1)] = Dict("pv_prod_factor" => solar_profiles[:, i], "scenario_prob"=> 1/(ncol(solar_profiles)-2))
 end
 
+##Can run to check scenario modeling is working correctly. Should be equal to average.
+# for i in 2:(ncol(solar_profiles)-1)
+#     solar_profile_runs["SolarProfile_"*string(i-1)] = Dict("pv_prod_factor" => Array(solar_profiles.Avg), "scenario_prob"=> 1/(ncol(solar_profiles)-2))
+# end
+
 results2 = run_reopt( inputs, Optimizer_Type;  additional_scenario_inputs = solar_profile_runs)
 println("_____________________________________________________________________\n\n\n\n")
 println("System size using averages")
