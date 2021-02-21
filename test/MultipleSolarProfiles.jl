@@ -1,9 +1,10 @@
-# using GLPK
-using Gurobi
+using Cbc
+# using Gurobi
 using DataFrames
 import CSV
 #Ran tests using Gurobi. Pick your favorite optimizer and have fun
-Optimizer_Type = Gurobi.Optimizer
+# Optimizer_Type = Gurobi.Optimizer
+Optimizer_Type = Cbc.Optimizer
 
 import JSON
 # import CSV

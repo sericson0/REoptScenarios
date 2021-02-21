@@ -4,7 +4,6 @@ module REoptScenarios
     # cd(dirname(@__FILE__))
 
 using JuMP, GLPK, HTTP, Parameters, Dates, DelimitedFiles, DataFrames
-using Gurobi
 using JuMP.Containers: DenseAxisArray
 import JSON, CSV
 

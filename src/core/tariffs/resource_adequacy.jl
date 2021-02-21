@@ -52,7 +52,7 @@ end
 
 function resource_adequacy_scenario(m::JuMP.AbstractModel, grid_purchases, scenario::Scenario, params::Dict)
 	tariff_return_vals = Dict()
-    MaxMonthlyRa = 10000*maximum(params["load"])
+    MaxMonthlyRa = 10000*maximum(params["electric_load"])
 
 	ra = params["resource_adequacy"]
 
